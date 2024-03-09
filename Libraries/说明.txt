@@ -1,0 +1,26 @@
+该文件夹存放库文件，用户一般无需更改。
+
+【CMSIS】
+	Cortex微控制器软件接口程序（Cortex Microcontroller Software Interface Standard (CMSIS). ）
+	版本: V2.10
+	发布日期: 2011-07-25
+
+【STM32F4xx_StdPeriph_Driver】
+	STM32F40x系列CPU标准外设驱动程序
+	版本: V1.0.2
+	发布日期:   2012-03-05
+
+【STM32_USB_OTG_Driver】
+	STM32F105/7xx, STM32F2xx and STM32F4xx USB Device Library
+	版本: V2.1.0
+	发布日期:   2012-03-19
+
+【STM32_USB_Device_Library】
+	STM32F105/7xx, STM32F2xx and STM32F4xx USB Device Library
+	版本: V1.1.0
+	发布日期:   2012-03-05
+
+【STM32_USB_HOST_Library】
+	STM32F105/7xx, STM32F2xx and STM32F4xx USB Host Library
+	版本: V2.1.0
+	发布日期:   2012-03-19
