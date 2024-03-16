@@ -78,6 +78,14 @@ void bsp_InitUart(void)
 
 	ConfigUartNVIC();	/* 配置串口中断 */
 }
+void Usart_SendByte( USART_TypeDef * pUSARTx, uint8_t ch)
+{
+	/* 发送一个字节数据到USART */
+	USART_SendData(pUSARTx,ch);
+	/* 等待发送数据寄存器为空 */
+	while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);
+	
+}
 
 /*
 *********************************************************************************************************

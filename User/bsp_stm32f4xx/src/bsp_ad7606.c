@@ -36,15 +36,15 @@
 #define RANGE_1()	GPIOE->BSRRL = GPIO_Pin_5
 #define RANGE_0()	GPIOE->BSRRH = GPIO_Pin_5
 
-/* AD7606复位口线 : PA7  */
-#define RESET_1()	GPIOA->BSRRL = GPIO_Pin_7
-#define RESET_0()	GPIOA->BSRRH = GPIO_Pin_7
+/* AD7606复位口线 : PA6  */
+#define RESET_1()	GPIOA->BSRRL = GPIO_Pin_6
+#define RESET_0()	GPIOA->BSRRH = GPIO_Pin_6
 
 /* AD7606 FSMC总线地址，只能读，无需写 */
 // #define AD7606_RESULT()	*(__IO uint16_t *)0x6C400000
 #define AD7606_RESULT()	*(__IO uint16_t *)0x60000000
 
-//busy A6
+//busy A7
 //
 
 AD7606_VAR_T g_tAD7606;		/* 定义1个全局变量，保存一些参数 */
@@ -210,7 +210,7 @@ static void AD7606_CtrlLinesConfig(void)
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;	//CONVST
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;	//复位
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;	//复位
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
 	}
 }
@@ -549,14 +549,14 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 		/* Configure PI6 pin as input floating */
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-		/* Connect EXTI Line6 to PI6 pin */
-		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOI, EXTI_PinSource6);
+		/* Connect EXTI Line7 to PI6 pin */
+		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource7);
 
-		/* Configure EXTI Line6 */
-		EXTI_InitStructure.EXTI_Line = EXTI_Line6;
+		/* Configure EXTI Line7 */
+		EXTI_InitStructure.EXTI_Line = EXTI_Line7;
 		EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 		EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
 
@@ -564,7 +564,7 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 		EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 		EXTI_Init(&EXTI_InitStructure);
 
-		/* Enable and set EXTI Line6 Interrupt to the lowest priority */
+		/* Enable and set EXTI Line7 Interrupt to the lowest priority */
 		NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
 		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
 		NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
@@ -637,12 +637,12 @@ void AD7606_ISR(void)
 */
 void EXTI9_5_IRQHandler(void)
 {
-	if (EXTI_GetITStatus(EXTI_Line6) != RESET)
+	if (EXTI_GetITStatus(EXTI_Line7) != RESET)
 	{
 		AD7606_ISR();
 
 		/* Clear the EXTI line 6 pending bit */
-		EXTI_ClearITPendingBit(EXTI_Line6);
+		EXTI_ClearITPendingBit(EXTI_Line7);
 	}
 }
 
@@ -708,7 +708,7 @@ uint8_t AD7606_ReadFifo(uint16_t *_usReadAdc)
 {
 	if (AD7606_HasNewData())
 	{
-		_usReadAdc = g_tAdcFifo.sBuf[g_tAdcFifo.usRead];
+		memcpy(_usReadAdc ,g_tAdcFifo.sBuf[g_tAdcFifo.usRead],2*8);
 		if (++g_tAdcFifo.usRead >= ADC_FIFO_SIZE)
 		{
 			g_tAdcFifo.usRead = 0;
@@ -771,7 +771,7 @@ void AD7606_StopRecord(void)
 		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
 	}
 

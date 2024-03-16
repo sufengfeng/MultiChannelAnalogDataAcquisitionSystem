@@ -23,7 +23,7 @@
 
 /* 仅允许本文件内调用的函数声明 */
 static void PrintfLogo(void);
-
+void Usart_SendByte( USART_TypeDef * pUSARTx, uint8_t ch);
 /*
 *********************************************************************************************************
 *	函 数 名: main
@@ -38,7 +38,7 @@ int main(void)
 	uint8_t ucRefresh = 0;
 	uint8_t ucFifoMode;
 	int8_t l_sTmpSendBuf[18];
-	int16_t *p_tmpAdcValue;		/* 当前ADC值, 有符号数 */
+	
 	/*
 		由于ST固件库的启动文件已经执行了CPU系统时钟的初始化，所以不必再次重复配置系统时钟。
 		启动文件配置了CPU主时钟频率、内部Flash访问速度和可选的外部SRAM FSMC初始化。
@@ -75,22 +75,28 @@ int main(void)
 	AD7606_SetInputRange(0);	/* 0表示输入量程为正负5V, 1表示正负10V */
 
 	bsp_StartAutoTimer(0, 500);	/* 启动1个200ms的自动重装的定时器 */
-	// bsp_StartAutoTimer(1, 2500);	/* 启动1个200ms的自动重装的定时器 */
+	// bsp_StartAutoTimer(1, 500);	/* 启动1个200ms的自动重装的定时器 */
 	AD7606_StartConvst();		/* 启动1次转换 */
 	ucRefresh = 0;
 
-	// ucFifoMode = 1;	 				/* AD7606进入FIFO工作模式 */
-	// printf("\r\nAD7606进入FIFO工作模式 (200KHz 8通道同步采集)...\r\n");
-	// AD7606_StartRecord(200000);		/* 启动200kHz采样速率 */
+	ucFifoMode = 1;	 				/* AD7606进入FIFO工作模式 */
+	printf("\r\nAD7606进入FIFO工作模式 (200KHz 8通道同步采集)...\r\n");
+	AD7606_StartRecord(200000);		/* 启动200kHz采样速率 */
 	
-	l_sTmpSendBuf[0]=0xf5;l_sTmpSendBuf[7]=0x5f;
+	l_sTmpSendBuf[0]=0xA5;l_sTmpSendBuf[17]=0x5A;
 	while (1)
 	{
+		int i;
+		int16_t p_tmpAdcValue[8];		/* 当前ADC值, 有符号数 */
 		CPU_IDLE();		/* 这个宏在bsp_timer.h 中定义，目前定义为空。用户可以修改这个宏实现CPU休眠和喂狗 */
 		// uint8_t AD7606_ReadFifo(uint16_t *_usReadAdc);
 		if(AD7606_ReadFifo((uint16_t *)p_tmpAdcValue)){
+			GPIO_ToggleBits(GPIOC,GPIO_Pin_13);
 			memcpy(l_sTmpSendBuf+1,p_tmpAdcValue,8*2);
-			comSendBuf(COM1, (uint8_t *)l_sTmpSendBuf, 18);
+			for(i=0;i<18;i++){
+				Usart_SendByte(USART1,l_sTmpSendBuf[i]);
+			}
+			// comSendBuf(COM1, (uint8_t *)l_sTmpSendBuf, 18);
 		}
 		if (ucRefresh == 1) 
 		{
