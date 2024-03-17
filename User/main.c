@@ -54,15 +54,15 @@ int main(void)
 		GPIO_InitTypeDef GPIO_InitStructure;
 
 		/* 使能 GPIO时钟 */
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
-		GPIO_Init(GPIOC, &GPIO_InitStructure);
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
 	}
 	
 	PrintfLogo();		/* 打印例程Logo到串口1 */
@@ -91,7 +91,8 @@ int main(void)
 		CPU_IDLE();		/* 这个宏在bsp_timer.h 中定义，目前定义为空。用户可以修改这个宏实现CPU休眠和喂狗 */
 		// uint8_t AD7606_ReadFifo(uint16_t *_usReadAdc);
 		if(AD7606_ReadFifo((uint16_t *)p_tmpAdcValue)){
-			GPIO_ToggleBits(GPIOC,GPIO_Pin_13);
+			GPIO_ToggleBits(GPIOB,GPIO_Pin_4);
+			GPIO_ToggleBits(GPIOB,GPIO_Pin_5);
 			memcpy(l_sTmpSendBuf+1,p_tmpAdcValue,8*2);
 			for(i=0;i<18;i++){
 				Usart_SendByte(USART1,l_sTmpSendBuf[i]);
@@ -101,7 +102,8 @@ int main(void)
 		if (ucRefresh == 1) 
 		{
 			ucRefresh = 0;
-			GPIO_ToggleBits(GPIOC,GPIO_Pin_13);
+			GPIO_ToggleBits(GPIOB,GPIO_Pin_4);
+			GPIO_ToggleBits(GPIOB,GPIO_Pin_5);
 			/* 打印ADC采样结果 */
 			printf("Range = %d, OS = %d, ", g_tAD7606.ucRange, g_tAD7606.ucOS);
 			printf("CH1 = %6d, CH2 = %6d, CH3 = %6d, CH4 = %6d, ",

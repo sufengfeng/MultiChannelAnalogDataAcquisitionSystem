@@ -28,9 +28,9 @@
 #define OS2_1()		GPIOE->BSRRL = GPIO_Pin_4
 #define OS2_0()		GPIOE->BSRRH = GPIO_Pin_4
 
-/* 启动AD转换的GPIO : PA2  , PA2/TIM5_CH3/DCMI_D3 */
-#define CONVST_1()	GPIOA->BSRRL = GPIO_Pin_2
-#define CONVST_0()	GPIOA->BSRRH = GPIO_Pin_2
+/* 启动AD转换的GPIO : PB8  , PB8/TIM5_CH3/DCMI_D3 */
+#define CONVST_1()	GPIOB->BSRRL = GPIO_Pin_8
+#define CONVST_0()	GPIOB->BSRRH = GPIO_Pin_8
 
 /* 设置输入量程的GPIO :  PE5*/
 #define RANGE_1()	GPIOE->BSRRL = GPIO_Pin_5
@@ -117,8 +117,8 @@ void bsp_InitAD7606(void)
 	PE4/DCMI_D2/AD7606_OS2         ---> AD7606_OS2
 	PA2/DCMI_D3/AD7606_CONVST      ---> AD7606_CONVST	启动ADC转换 (CONVSTA 和 CONVSTB 已经并联)
 	PE5/DCMI_D4/AD7606_RAGE        ---> AD7606_RAGE	输入模拟电压量程，正负5V或正负10V
-	PA7/DCMI_D5/AD7606_RESET        ---> AD7606_RESET	复位
-	PA6/DCMI_D6/AD7606_BUSY         ---> AD7606_BUSY	忙信号	(未使用)
+	PA6/DCMI_D5/AD7606_RESET        ---> AD7606_RESET	复位
+	PA7/DCMI_D6/AD7606_BUSY         ---> AD7606_BUSY	忙信号	(未使用)
 
 */
 static void AD7606_CtrlLinesConfig(void)
@@ -191,13 +191,13 @@ static void AD7606_CtrlLinesConfig(void)
 		PE4/DCMI_D2/AD7606_OS2         ---> AD7606_OS2
 		PA2/DCMI_D3/AD7606_CONVST      ---> AD7606_CONVST	启动ADC转换
 		PE5/DCMI_D4/AD7606_RAGE        ---> AD7606_RAGE	输入模拟电压量程，正负5V或正负10V
-		PA7/DCMI_D5/AD7606_RESET        ---> AD7606_RESET	复位
+		PA6/DCMI_D5/AD7606_RESET        ---> AD7606_RESET	复位
 
-		PA6/DCMI_D6/AD7606_BUSY			---> AD7606_BUSY    转换结束的信号
+		PA7/DCMI_D6/AD7606_BUSY			---> AD7606_BUSY    转换结束的信号
 	*/
 	{
 		/* 使能 GPIO时钟 */
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOA, ENABLE);
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE |RCC_AHB1Periph_GPIOB| RCC_AHB1Periph_GPIOA, ENABLE);
 
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -207,8 +207,9 @@ static void AD7606_CtrlLinesConfig(void)
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
 		GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;	//CONVST
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;	//CONVST
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
 
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;	//复位
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
@@ -440,7 +441,7 @@ void AD7606_ReadNowAdc(void)
 */
 
 /*
-		CONVST 引脚，PA6使用TIM5_CH3输出PWM脉冲，触发AD7606启动ADC转换。
+		CONVST 引脚，PB8使用TIM4_CH3输出PWM脉冲，触发AD7606启动ADC转换。
 		设置BUSY口线为下降沿中断。在中断服务程序保存ADC结果。
 */
 
@@ -459,21 +460,21 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 		GPIO_InitTypeDef GPIO_InitStructure;
 
 		/* TIM5 clock enable */
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
 		/* GPIOA clock enable */
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
-		/* GPIOH Configuration: PA2  -> TIM5 CH3 */
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+		/* GPIOH Configuration: PB8  -> TIM4 CH3 */
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-		/* Connect TIM5 pins to AF2 */
-		GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_TIM5);
+		/* Connect TIM5 pins to PB8 */
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_TIM4);
 	}
 
 	{
@@ -518,7 +519,7 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 		TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 		TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 
-		TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
+		TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
 
 		/* PWM1 Mode configuration: Channel1 */
 		TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -526,16 +527,16 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 		TIM_OCInitStructure.TIM_Pulse = 4;
 		TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
 
-		TIM_OC3Init(TIM5, &TIM_OCInitStructure);
+		TIM_OC3Init(TIM4, &TIM_OCInitStructure);
 
-		TIM_OC3PreloadConfig(TIM5, TIM_OCPreload_Enable);
+		TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
 
-		TIM_ARRPreloadConfig(TIM5, ENABLE);
+		TIM_ARRPreloadConfig(TIM4, ENABLE);
 
-		TIM_Cmd(TIM5, ENABLE);
+		TIM_Cmd(TIM4, ENABLE);
 	}
 
-	/* 配置PA6, BUSY 作为中断输入口，下降沿触发 */
+	/* 配置PA7, BUSY 作为中断输入口，下降沿触发 */
 	{
 		EXTI_InitTypeDef   EXTI_InitStructure;
 		GPIO_InitTypeDef   GPIO_InitStructure;
@@ -630,7 +631,7 @@ void AD7606_ISR(void)
 /*
 *********************************************************************************************************
 *	函 数 名: EXTI9_5_IRQHandler
-*	功能说明: 外部中断服务程序入口。PA6/AD7606_BUSY 下降沿中断触发
+*	功能说明: 外部中断服务程序入口。PA7/AD7606_BUSY 下降沿中断触发
 *	形    参：无
 *	返 回 值: 无
 *********************************************************************************************************
@@ -757,9 +758,9 @@ void AD7606_StartRecord(uint32_t _ulFreq)
 */
 void AD7606_StopRecord(void)
 {
-	TIM_Cmd(TIM5, DISABLE);
+	TIM_Cmd(TIM4, DISABLE);
 
-	/* 将PA6 重新配置为普通输出口 */
+	/* 将PA7 重新配置为普通输出口 */
 	{
 		GPIO_InitTypeDef GPIO_InitStructure;
 
