@@ -862,38 +862,42 @@ static void UartSend(UART_T *_pUart, uint8_t *_ucaBuf, uint16_t _usLen)
 
 	for (i = 0; i < _usLen; i++)
 	{
-		/* 如果发送缓冲区已经满了，则等待缓冲区空 */
-		while (1)
-		{
-			uint16_t usRead;
+		// /* 如果发送缓冲区已经满了，则等待缓冲区空 */
+		// while (1)
+		// {
+		// 	uint16_t usRead;
 
-			DISABLE_INT();
-			usRead = _pUart->usTxRead;
-			ENABLE_INT();
+		// 	DISABLE_INT();
+		// 	usRead = _pUart->usTxRead;
+		// 	ENABLE_INT();
 
-			if (++usRead >= _pUart->usTxBufSize)
-			{
-				usRead = 0;
-			}
+		// 	if (++usRead >= _pUart->usTxBufSize)
+		// 	{
+		// 		usRead = 0;
+		// 	}
 
-			if (usRead != _pUart->usTxWrite)
-			{
-				break;
-			}
-		}
+		// 	if (usRead != _pUart->usTxWrite)
+		// 	{
+		// 		break;
+		// 	}
+		// }
 
-		/* 将新数据填入发送缓冲区 */
-		_pUart->pTxBuf[_pUart->usTxWrite] = _ucaBuf[i];
+		// /* 将新数据填入发送缓冲区 */
+		// _pUart->pTxBuf[_pUart->usTxWrite] = _ucaBuf[i];
 
-		DISABLE_INT();
-		if (++_pUart->usTxWrite >= _pUart->usTxBufSize)
-		{
-			_pUart->usTxWrite = 0;
-		}
-		ENABLE_INT();
+		// DISABLE_INT();
+		// if (++_pUart->usTxWrite >= _pUart->usTxBufSize)
+		// {
+		// 	_pUart->usTxWrite = 0;
+		// }
+		// ENABLE_INT();
+			/* 发送一个字节数据到USART */
+		USART_SendData(_pUart->uart,_ucaBuf[i]);
+		/* 等待发送数据寄存器为空 */
+		while (USART_GetFlagStatus(_pUart->uart, USART_FLAG_TXE) == RESET);
 	}
 
-	USART_ITConfig(_pUart->uart, USART_IT_TXE, ENABLE);
+	// USART_ITConfig(_pUart->uart, USART_IT_TXE, ENABLE);
 }
 
 /*

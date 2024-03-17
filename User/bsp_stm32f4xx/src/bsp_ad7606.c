@@ -411,7 +411,6 @@ void AD7606_StartConvst(void)
 	CONVST_1();
 	
 }
-
 /*
 *********************************************************************************************************
 *	函 数 名: AD7606_ReadNowAdc
@@ -422,6 +421,8 @@ void AD7606_StartConvst(void)
 */
 void AD7606_ReadNowAdc(void)
 {
+	static int16_t sNowAdc[8];		/* 当前ADC值, 有符号数 */
+	int i=0;
 	g_tAD7606.sNowAdc[0] = AD7606_RESULT();	/* 读第1路样本 */
 	g_tAD7606.sNowAdc[1] = AD7606_RESULT();	/* 读第2路样本 */
 	g_tAD7606.sNowAdc[2] = AD7606_RESULT();	/* 读第3路样本 */
@@ -430,6 +431,12 @@ void AD7606_ReadNowAdc(void)
 	g_tAD7606.sNowAdc[5] = AD7606_RESULT();	/* 读第6路样本 */
 	g_tAD7606.sNowAdc[6] = AD7606_RESULT();	/* 读第7路样本 */
 	g_tAD7606.sNowAdc[7] = AD7606_RESULT();	/* 读第8路样本 */
+	for(;i<6;i++){		//
+		if(g_tAD7606.sNowAdc[i]==0){
+			g_tAD7606.sNowAdc[i]=sNowAdc[i];
+		}
+	}
+	memcpy(sNowAdc,g_tAD7606.sNowAdc,8*2);
 }
 
 /*
@@ -499,7 +506,7 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 			APB1 定时器有 TIM2, TIM3 ,TIM4, TIM5, TIM6, TIM6, TIM12, TIM13,TIM14
 			APB2 定时器有 TIM1, TIM8 ,TIM9, TIM10, TIM11
 		*/
-
+		_ulFreq=200000;
 		uiTIMxCLK = SystemCoreClock / 2;
 
 		if (_ulFreq < 3000)
@@ -509,8 +516,8 @@ void AD7606_EnterAutoMode(uint32_t _ulFreq)
 		}
 		else	/* 大于4K的频率，无需分频 */
 		{
-			usPrescaler = 0;					/* 分频比 = 1 */
-			usPeriod = uiTIMxCLK / _ulFreq - 1;	/* 自动重装的值 */
+			usPrescaler = 16-1;					/* 分频比 = 1 */
+			usPeriod = uiTIMxCLK / _ulFreq/50 - 1;	/* 自动重装的值 */
 		}
 
 		/* Time base configuration */
